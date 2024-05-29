@@ -1,5 +1,6 @@
 import torch
 import torch.nn as nn
+import torch.nn.functional as f
 import math
 
 class Attention(nn.Module):
@@ -50,6 +51,24 @@ class MultiHeadAttention(nn.Module):
         attn_out, attention = self.attention(q, k, v, mask)
         attn_out = self.nomLayer(attn_out + q)
         return attn_out, attention
+
+
+### Create layer Feed Forward 
+class FeedForward(nn.Module):
+    def __init__(self, d_model, d_ff, dropout) -> None:
+        super().__init__()
+        self.layer1 = nn.Linear(d_model, d_ff)
+        self.layer2 = nn.Linear(d_ff, d_model)
+        self.dropout = nn.Dropout(dropout)
+        self.AddNorm = nn.LayerNorm(d_model)
+
+    def forward(selx, x):
+        x = self.layer1(x)
+        x = f.relu(x)
+        x = self.layer2(x)
+        x = x + self.dropout(x)
+        return self.AddNorm(x)
+
 
 
 
