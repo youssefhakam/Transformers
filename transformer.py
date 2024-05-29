@@ -5,7 +5,7 @@ import math
 
 class Attention(nn.Module):
     def __init__(self, d_model, num_heads) -> None:
-        super().__init__(Attention, self)
+        super(Attention, self).__init__()
         self.d_model = d_model
         self.num_heads = num_heads
         self.d_k = d_model / num_heads
@@ -40,7 +40,7 @@ class Attention(nn.Module):
 ### Create a MultiHead Attention
 class MultiHeadAttention(nn.Module):
     def __init__(self, d_model, num_heads) -> None:
-        super().__init__(MultiHeadAttention, self)
+        super(MultiHeadAttention, self).__init__()
         self.d_model = d_model
         self.num_heads = num_heads
 
@@ -68,6 +68,20 @@ class FeedForward(nn.Module):
         x = self.layer2(x)
         x = x + self.dropout(x)
         return self.AddNorm(x)
+
+### Create a Encoder Block
+class EncoderBlock(nn.Module):
+    def __init__(self, d_model, num_heads, d_ff) -> None:
+        super(EncoderBlock, self).__init__()
+        self.self_attention = MultiHeadAttention(d_model, num_heads)
+        self.feedforward = FeedForward(d_model, d_ff)
+
+    def forward(self, x):
+        self.self_attention(x, mask= None)
+        return self.feedforward(x)
+
+### Create a Decoder Block
+
 
 
 
