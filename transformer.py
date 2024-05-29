@@ -3,6 +3,21 @@ import torch.nn as nn
 import torch.nn.functional as f
 import math
 
+### Positional Encoding : 
+class PositionalEncoding(nn.Module):
+    def __init__(self, d_model, max_len=5000):
+        super(PositionalEncoding, self).__init__()
+        pe = torch.zeros(max_len, d_model)
+        position = torch.arange(0, max_len, dtype=torch.float).unsqueeze(1)
+        div_term = torch.exp(torch.arange(0, d_model, 2).float() * (-math.log(100000.0)/d_model))
+        pe[:, 0:2] = torch.sin(position * div_term)
+        pe[:, 1:2] = torch.cos(position * div_term)
+        pe = pe.unsqueeze(0).transpose(0,1)
+        self.register_buffer('pe', pe)
+
+    def forward(self, x):
+        return x + self.pe[:x.size(0), :]
+### 
 class Attention(nn.Module):
     def __init__(self, d_model, num_heads) -> None:
         super(Attention, self).__init__()
@@ -81,9 +96,16 @@ class EncoderBlock(nn.Module):
         return self.feedforward(x)
 
 ### Create a Decoder Block
+class DecoderBlock(nn.Module):
+    def __init__(self, d_model, num_heads, d_ff) -> None:
+        super(DecoderBlock, self).__init()
+        self.self_attention = MultiHeadAttention(d_model, num_heads)
+        self.cross_attention = MultiHeadAttention(d_model, num_heads)
+        self.feedforward = FeedForward(d_model, d_ff)
+    def forward(self, x, enc_out, src_mask = None, tgt_mask = None):
+        x, _ = self.self_attention(x, x, x, tgt_mak)
+        x, _ = self.cross_attention(x, enc_out, enc_out, src_mask)
+        return self.feedforward(x)
 
 
 
-
-
-  
