@@ -108,4 +108,50 @@ class DecoderBlock(nn.Module):
         return self.feedforward(x)
 
 
+### Encoder
 
+class Encoder(nn.Module):
+    def __init__(self, vocab_size, d_model, num_heads, d_ff, num_layers, max_len):
+        super(Encoder, self).__init__()
+        self.embed = nn.Embedding(vocab_size, d_model)
+        self.pos_encoder = PositionalEncoding(d_model, max_len)
+        self.layers = nn.ModuleList([EncoderBlock(d_model, num_heads, d_ff) for _ in range(num_layers)])
+        self.norm = nn.LayerNorm(d_model)
+        self.d_model = d_model
+    def forward(self, src, mask = None):
+        x = self.embed(src) * math.sqrt(self.d_model)
+        x = self.pos_encoder(x)
+        for layer in self.layers:
+            x = layer(x, mask)
+        return self.norm(x)
+
+### Decoder
+
+class Decoder(nn.Module):
+    def __init__(self, vocab_size, d_model, num_heads, d_ff, num_layers, max_len) -> None:
+        super(Decoder, self).__init__()
+        self.embed = nn.Embedding(vocab_size, d_model)
+        self.pos_decoder = PositionalEncoding(d_model, max_len)
+        self.layers = nn.ModuleList([DecoderBlock(d_model, num_heads, d_ff) for _ in range(num_layers)])
+        self.norm = nn.LayerNorm(d_model)
+        self.d_model = d_model
+    def forward(self, src, enc_out, src_mask = None, tgt_mask = None):
+        x = self.embed(src) * math.sqrt(self.d_model)
+        x = self.pos_decoder(x)
+        for layer in self.layers:
+            x = layer(x, enc_out, src_mask, tgt_mask)
+        return self.norm(x)
+
+
+### Create a Transformer
+class Transformer(nn.Module):
+    def __init__(self, src_vocab_size, tgt_vocab_size, d_model , num_heads, d_ff, max_len, num_layers = 6):
+        super(Transformer, self).__init__()
+        self.encoder = Encoder(src_vocab_size, d_model,num_heads, d_ff, num_layers, max_len)
+        self.deocder = Decoder(tgt_vocab_size, d_model,num_heads, d_ff, num_layers, max_len)
+        self.fc = nn.Linear(d_model, tgt_vocab_size)
+
+    def forward(self, src, tgt, src_mask = None, tgt_mask = None):
+        enc_out = self.encoder(src, src_mask)
+        dec_out = self.deocder(tgt, enc_out, src_mask, tgt_mask)
+        return self.fc(dec_out)
