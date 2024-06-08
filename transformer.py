@@ -77,7 +77,7 @@ class FeedForward(nn.Module):
         self.dropout = nn.Dropout(dropout)
         self.AddNorm = nn.LayerNorm(d_model)
 
-    def forward(selx, x):
+    def forward(self, x):
         x = self.layer1(x)
         x = f.relu(x)
         x = self.layer2(x)
@@ -103,7 +103,7 @@ class DecoderBlock(nn.Module):
         self.cross_attention = MultiHeadAttention(d_model, num_heads)
         self.feedforward = FeedForward(d_model, d_ff)
     def forward(self, x, enc_out, src_mask = None, tgt_mask = None):
-        x, _ = self.self_attention(x, x, x, tgt_mak)
+        x, _ = self.self_attention(x, x, x, tgt_mask)
         x, _ = self.cross_attention(x, enc_out, enc_out, src_mask)
         return self.feedforward(x)
 
